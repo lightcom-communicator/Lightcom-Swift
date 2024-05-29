@@ -8,6 +8,7 @@ import Foundation
 /// Lightcom client object
 public class LightcomClient {
     private var requester: Requester
+    private var serverUrl: String
     
     /// User ID
     private(set) public var userId: String
@@ -23,7 +24,8 @@ public class LightcomClient {
     /// - Parameter serverUrl: URL address to the lightcom server
     /// - Returns: `LightcomClient` object instance
     public init(serverUrl: String) async throws {
-        self.requester = Requester(serverUrl: serverUrl)
+        self.serverUrl = (serverUrl.hasPrefix("http")) ? String(serverUrl.dropFirst(4)) : serverUrl
+        self.requester = Requester(serverUrl: "http" + self.serverUrl)
         
         let privateKey = Data(generateRandomBytesArray())
         self.privateKeyEncoded = Hex.toHexString(privateKey)
@@ -50,7 +52,8 @@ public class LightcomClient {
     ///
     /// - Returns: `LightcomClient` object instance
     public init(serverUrl: String, userId: String, privateKeyEncoded: String) async throws {
-        self.requester = Requester.init(serverUrl: serverUrl)
+        self.serverUrl = (serverUrl.hasPrefix("http")) ? String(serverUrl.dropFirst(4)) : serverUrl
+        self.requester = Requester.init(serverUrl: self.serverUrl)
         self.userId = userId
         self.privateKeyEncoded = privateKeyEncoded
         self.publicKeyEncoded = try X25519.fromPrivateKey(privateKey: self.privateKeyEncoded).publicKey
@@ -68,7 +71,8 @@ public class LightcomClient {
     ///
     /// - Returns: `LightcomClient` object instance
     public init(serverUrl: String, userId: String, privateKeyEncoded: String, accessToken: String) throws {
-        self.requester = Requester.init(serverUrl: serverUrl, accessToken: accessToken)
+        self.serverUrl = (serverUrl.hasPrefix("http")) ? String(serverUrl.dropFirst(4)) : serverUrl
+        self.requester = Requester.init(serverUrl: self.serverUrl, accessToken: accessToken)
         self.userId = userId
         self.privateKeyEncoded = privateKeyEncoded
         self.publicKeyEncoded = try X25519.fromPrivateKey(privateKey: self.privateKeyEncoded).publicKey
@@ -96,6 +100,28 @@ public class LightcomClient {
         return try await self.requester.requestAndParse(endpoint: "/new", method: "GET", body: nil)
     }
     
+    /// Open connection to the server which informs if we got a message
+    ///
+    /// - Parameter onMessage: callback
+    public func newMessages(onMessage: @escaping (_: [String: Int]) -> ()) throws -> Websocket {
+        let accessTokenRequest = try JSONEncoder().encode(Requests.AccessToken(accessToken: self.accessToken))
+        
+        let websocket = Websocket(url: "ws" + self.serverUrl + "/newWS", onReceive: { data, string in
+            guard let parsedJSON = try? JSONDecoder().decode(
+                [String: Int].self,
+                from: data != nil ? data! : string!.data(using: .utf8)!
+            ) else {
+                return
+            }
+            
+            onMessage(parsedJSON)
+        })
+        
+        websocket.send(message: accessTokenRequest)
+        
+        return websocket
+    }
+    
     /// Fetch messages from a specific user
     ///
     /// - Parameter forUser: ID of the user which sent us messages
@@ -116,7 +142,7 @@ public class LightcomClient {
         let response = try await self.fetchMessages(forUser: userId)
         var messages: [Message] = []
         for message in response {
-            messages.append(try Message.Decrypt(encryptedMessage: message, key: sharedSecret))
+            messages.append(try Message.decrypt(encryptedMessage: message, key: sharedSecret))
         }
         
         return messages
@@ -143,7 +169,7 @@ public class LightcomClient {
     ///   - message: unencrypted message
     public func sendMessageAndEncrypt(forUser destination: String, theirPublicKeyEncoded: String, message: Message) async throws {
         let sharedSecret = try X25519.computeSharedSecret(ourPrivate: self.privateKeyEncoded, theirPublic: theirPublicKeyEncoded)
-        let encryptedMessage = try message.Encrypt(from: self.userId, to: destination, key: sharedSecret)
+        let encryptedMessage = try message.encrypt(from: self.userId, to: destination, key: sharedSecret)
         
         try await self.sendMessage(forUser: destination, message: encryptedMessage)
     }

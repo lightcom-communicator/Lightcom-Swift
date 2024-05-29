@@ -31,7 +31,7 @@ public class Message: Codable {
     ///   - key: encryption key
     ///
     /// - Returns: `Message` object instance
-    public static func Decrypt(encryptedMessage: Responses.Message, key: SymmetricKey) throws -> Self {
+    public static func decrypt(encryptedMessage: Responses.Message, key: SymmetricKey) throws -> Self {
         let decrypted = try AesGcm.decrypt(encryptedMessage.content, key: key)
         return try JSONDecoder().decode(Self.self, from: decrypted.data(using: .utf8)!)
     }
@@ -43,7 +43,7 @@ public class Message: Codable {
     ///   - to: User ID of the user which this message will be sent to
     ///
     /// - Returns: `Responses.Message`
-    public func Encrypt(from: String, to: String, key: SymmetricKey) throws -> Responses.Message {
+    public func encrypt(from: String, to: String, key: SymmetricKey) throws -> Responses.Message {
         return try Responses.Message(
             fromUser: from,
             toUser: to,

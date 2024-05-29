@@ -9,4 +9,8 @@ class Requests {
         public var userId: String
         public var sharedSecret: String
     }
+    
+    public struct AccessToken: Codable {
+        public var accessToken: String
+    }
 }

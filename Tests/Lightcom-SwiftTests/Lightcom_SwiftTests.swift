@@ -22,5 +22,22 @@ final class Lightcom_SwiftTests: XCTestCase {
         let messages2 = try await client2.fetchMessagesAndDecrypt(forUser: client1.userId, theirPublicKeyEncoded: client1.publicKeyEncoded)
         
         XCTAssert(messages1[0].content == "Hello world2" && messages2[0].content == "Hello world")
+        
+        let websocket = try client1.newMessages { new in
+            guard let _ = new[client2.userId] else {
+                XCTFail("invalid message")
+                return
+            }
+        }
+        
+        try await client2.sendMessageAndEncrypt(
+            forUser: client1.userId,
+            theirPublicKeyEncoded: client1.publicKeyEncoded,
+            message: Message(content: "Hello world2", mediaUrls: [])
+        )
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            websocket.close()
+        }
     }
 }
