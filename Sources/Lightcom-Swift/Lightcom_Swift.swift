@@ -103,7 +103,7 @@ public class LightcomClient {
     /// Open connection to the server which informs if we got a message
     ///
     /// - Parameter onMessage: callback
-    public func newMessages(onMessage: @escaping (_: [String: Int]) -> ()) throws -> Websocket {
+    public func newMessagesWS(onMessage: @escaping (_: [String: Int]) -> ()) throws -> Websocket {
         let accessTokenRequest = try JSONEncoder().encode(Requests.AccessToken(accessToken: self.accessToken))
         
         let websocket = Websocket(url: "ws" + self.serverUrl + "/newWS", onReceive: { data, string in

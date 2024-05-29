@@ -23,7 +23,7 @@ final class Lightcom_SwiftTests: XCTestCase {
         
         XCTAssert(messages1[0].content == "Hello world2" && messages2[0].content == "Hello world")
         
-        let websocket = try client1.newMessages { new in
+        let websocket = try client1.newMessagesWS { new in
             guard let _ = new[client2.userId] else {
                 XCTFail("invalid message")
                 return
