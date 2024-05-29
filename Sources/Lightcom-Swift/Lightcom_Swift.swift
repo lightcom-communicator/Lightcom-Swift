@@ -24,7 +24,7 @@ public class LightcomClient {
     /// - Parameter serverUrl: URL address to the lightcom server
     /// - Returns: `LightcomClient` object instance
     public init(serverUrl: String) async throws {
-        self.serverUrl = (serverUrl.hasPrefix("http")) ? String(serverUrl.dropFirst(4)) : serverUrl
+        self.serverUrl = (serverUrl.hasPrefix("http")) ? String(serverUrl.dropFirst(4)) : "s://" + serverUrl
         self.requester = Requester(serverUrl: "http" + self.serverUrl)
         
         let privateKey = Data(generateRandomBytesArray())
@@ -52,8 +52,8 @@ public class LightcomClient {
     ///
     /// - Returns: `LightcomClient` object instance
     public init(serverUrl: String, userId: String, privateKeyEncoded: String) async throws {
-        self.serverUrl = (serverUrl.hasPrefix("http")) ? String(serverUrl.dropFirst(4)) : serverUrl
-        self.requester = Requester.init(serverUrl: self.serverUrl)
+        self.serverUrl = (serverUrl.hasPrefix("http")) ? String(serverUrl.dropFirst(4)) : "s://" + serverUrl
+        self.requester = Requester.init(serverUrl: "http" + self.serverUrl)
         self.userId = userId
         self.privateKeyEncoded = privateKeyEncoded
         self.publicKeyEncoded = try X25519.fromPrivateKey(privateKey: self.privateKeyEncoded).publicKey
@@ -71,8 +71,8 @@ public class LightcomClient {
     ///
     /// - Returns: `LightcomClient` object instance
     public init(serverUrl: String, userId: String, privateKeyEncoded: String, accessToken: String) throws {
-        self.serverUrl = (serverUrl.hasPrefix("http")) ? String(serverUrl.dropFirst(4)) : serverUrl
-        self.requester = Requester.init(serverUrl: self.serverUrl, accessToken: accessToken)
+        self.serverUrl = (serverUrl.hasPrefix("http")) ? String(serverUrl.dropFirst(4)) : "s://" + serverUrl
+        self.requester = Requester.init(serverUrl: "http" + self.serverUrl, accessToken: accessToken)
         self.userId = userId
         self.privateKeyEncoded = privateKeyEncoded
         self.publicKeyEncoded = try X25519.fromPrivateKey(privateKey: self.privateKeyEncoded).publicKey
