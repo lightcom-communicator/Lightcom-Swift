@@ -87,6 +87,7 @@ public class LightcomClient {
         self.userId = userId
         self.privateKeyEncoded = privateKeyEncoded
         self.publicKeyEncoded = try X25519.fromPrivateKey(privateKey: self.privateKeyEncoded).publicKey
+        self.accessToken = accessToken
     }
     
     private func logIn() async throws {
