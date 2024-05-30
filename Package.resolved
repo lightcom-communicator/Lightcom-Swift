@@ -1,5 +1,5 @@
 {
-  "originHash" : "ad1b4b12e2cef5f0b5076617373bd2c20a5533be8acd1cfd52c6a46c262cd3b2",
+  "originHash" : "1307480f9ffa6a0d90d6525f0aa56b714a6fe06e6e07a5cccc39f7a85955b15c",
   "pins" : [
     {
       "identity" : "hsauth-swift",
@@ -31,10 +31,19 @@
     {
       "identity" : "swift-libcrypto",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/M3DZIK/swift-libcrypto.git",
+      "location" : "https://github.com/M3DZIK/swift-libcrypto",
       "state" : {
         "branch" : "main",
         "revision" : "47c73c31acb97dcddbfd5a42a704a36dd6cb0b5b"
+      }
+    },
+    {
+      "identity" : "websocketclient",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/aeoliux/WebsocketClient",
+      "state" : {
+        "branch" : "main",
+        "revision" : "d87ec1f7fceff880877b758434acdb597308493b"
       }
     }
   ],

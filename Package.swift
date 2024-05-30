@@ -16,6 +16,7 @@ let package = Package(
             targets: ["Lightcom-Swift"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/aeoliux/WebsocketClient", branch: "main"),
         .package(url: "https://github.com/aeoliux/hsauth-swift", branch: "main"),
         .package(url: "https://github.com/M3DZIK/swift-libcrypto", branch: "main"),
         .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "3.4.0")),
@@ -28,7 +29,8 @@ let package = Package(
             dependencies: [
                 .product(name: "LibCrypto", package: "swift-libcrypto"),
                 .product(name: "hsauth-swift", package: "hsauth-swift"),
-                .product(name: "Crypto", package: "swift-crypto")
+                .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "WebsocketClient", package: "WebsocketClient")
             ]
         ),
         .testTarget(

@@ -4,11 +4,13 @@
 import LibCrypto
 import hsauth_swift
 import Foundation
+import WebsocketClient
 
 /// Lightcom client object
 public class LightcomClient {
     private var requester: Requester
-    private var serverUrl: String
+    /// Server URL
+    private(set) public var serverUrl: String
     
     /// User ID
     private(set) public var userId: String
@@ -24,7 +26,10 @@ public class LightcomClient {
     /// - Parameter serverUrl: URL address to the lightcom server
     /// - Returns: `LightcomClient` object instance
     public init(serverUrl: String) async throws {
-        self.serverUrl = (serverUrl.hasPrefix("http")) ? String(serverUrl.dropFirst(4)) : "s://" + serverUrl
+        self.serverUrl = (
+            serverUrl.hasPrefix("http://") ||
+            serverUrl.hasPrefix("https://")
+        ) ? String(serverUrl.dropFirst(4)) : "s://" + serverUrl
         self.requester = Requester(serverUrl: "http" + self.serverUrl)
         
         let privateKey = Data(generateRandomBytesArray())
@@ -52,7 +57,10 @@ public class LightcomClient {
     ///
     /// - Returns: `LightcomClient` object instance
     public init(serverUrl: String, userId: String, privateKeyEncoded: String) async throws {
-        self.serverUrl = (serverUrl.hasPrefix("http")) ? String(serverUrl.dropFirst(4)) : "s://" + serverUrl
+        self.serverUrl = (
+            serverUrl.hasPrefix("http://") ||
+            serverUrl.hasPrefix("https://")
+        ) ? String(serverUrl.dropFirst(4)) : "s://" + serverUrl
         self.requester = Requester.init(serverUrl: "http" + self.serverUrl)
         self.userId = userId
         self.privateKeyEncoded = privateKeyEncoded
@@ -71,7 +79,10 @@ public class LightcomClient {
     ///
     /// - Returns: `LightcomClient` object instance
     public init(serverUrl: String, userId: String, privateKeyEncoded: String, accessToken: String) throws {
-        self.serverUrl = (serverUrl.hasPrefix("http")) ? String(serverUrl.dropFirst(4)) : "s://" + serverUrl
+        self.serverUrl = (
+            serverUrl.hasPrefix("http://") ||
+            serverUrl.hasPrefix("https://")
+        ) ? String(serverUrl.dropFirst(4)) : "s://" + serverUrl
         self.requester = Requester.init(serverUrl: "http" + self.serverUrl, accessToken: accessToken)
         self.userId = userId
         self.privateKeyEncoded = privateKeyEncoded
@@ -103,21 +114,13 @@ public class LightcomClient {
     /// Open connection to the server which informs if we got a message
     ///
     /// - Parameter onMessage: callback
-    public func newMessagesWS(onMessage: @escaping (_: [String: Int]) -> ()) throws -> Websocket {
-        let accessTokenRequest = try JSONEncoder().encode(Requests.AccessToken(accessToken: self.accessToken))
-        
-        let websocket = Websocket(url: "ws" + self.serverUrl + "/newWS", onReceive: { data, string in
-            guard let parsedJSON = try? JSONDecoder().decode(
-                [String: Int].self,
-                from: data != nil ? data! : string!.data(using: .utf8)!
-            ) else {
-                return
-            }
-            
+    public func newMessagesWS(onMessage: @escaping (_: [String: Int]) -> ()) async throws -> Websocket {
+        let websocket = Websocket(url: URL(string: "ws" + self.serverUrl + "/newWS")!) { data in
+            guard let parsedJSON = try? JSONDecoder().decode([String: Int].self, from: data) else { return }
             onMessage(parsedJSON)
-        })
+        }
         
-        websocket.send(message: accessTokenRequest)
+        try await websocket.sendAsync(Requests.AccessToken(accessToken: self.accessToken))
         
         return websocket
     }
